@@ -61,7 +61,7 @@ export const Contents = styled.div`
   padding-bottom: 120px;
 `;
 
-export const BottonWrapper = styled.div`
+export const ButtonWrapper = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;

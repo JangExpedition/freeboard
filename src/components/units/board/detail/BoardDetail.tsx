@@ -38,11 +38,11 @@ export default function BoardDetail() {
           <Styles.Contents>{data?.fetchBoard?.contents}</Styles.Contents>
         </Styles.Body>
       </Styles.CardWrapper>
-      <Styles.BottonWrapper>
+      <Styles.ButtonWrapper>
         <Styles.Button>목록으로</Styles.Button>
         <Styles.Button>수정하기</Styles.Button>
         <Styles.Button onClick={onClickDeleteBoard}>삭제하기</Styles.Button>
-      </Styles.BottonWrapper>
+      </Styles.ButtonWrapper>
     </Styles.Wrapper>
   );
 }
