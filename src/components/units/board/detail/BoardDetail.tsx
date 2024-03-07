@@ -8,6 +8,8 @@ import {
   IQuery,
   IQueryFetchBoardArgs,
 } from "@/commons/types/generated/types";
+import { getDate } from "@/commons/libararies/utils";
+import { Tooltip } from "antd";
 
 export default function BoardDetail() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function BoardDetail() {
     },
   );
 
-  const onClickDeleteBoard = async () => {
+  const onClickDeleteBoard = async (): Promise<void> => {
     await deleteBoard({
       variables: {
         boardId: router.query.boardId as string,
@@ -45,13 +47,33 @@ export default function BoardDetail() {
             <Styles.Avatar src="/images/avatar.png" />
             <Styles.Info>
               <Styles.Writer>{data?.fetchBoard?.writer}</Styles.Writer>
-              <Styles.CreatedAt>{data?.fetchBoard?.createdAt}</Styles.CreatedAt>
+              <Styles.CreatedAt>
+                {getDate(data?.fetchBoard?.createdAt)}
+              </Styles.CreatedAt>
             </Styles.Info>
           </Styles.AvatarWrapper>
+          <Styles.IconWrapper>
+            <Styles.LinkIcon src="/images/board/detail/link.png" />
+            <Tooltip
+              placement="topRight"
+              title={`${data?.fetchBoard.boardAddress?.address ?? ""} ${
+                data?.fetchBoard.boardAddress?.addressDetail ?? ""
+              }`}
+            >
+              <Styles.LocationIcon src="/images/board/detail/location.png" />
+            </Tooltip>
+          </Styles.IconWrapper>
         </Styles.Header>
         <Styles.Body>
           <Styles.Title>{data?.fetchBoard?.title}</Styles.Title>
           <Styles.Contents>{data?.fetchBoard?.contents}</Styles.Contents>
+          {data?.fetchBoard.youtubeUrl !== "" && (
+            <Styles.Youtube
+              url={data?.fetchBoard.youtubeUrl ?? ""}
+              width="486px"
+              height="240px"
+            />
+          )}
         </Styles.Body>
       </Styles.CardWrapper>
       <Styles.ButtonWrapper>

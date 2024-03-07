@@ -71,12 +71,16 @@ export default function BoardCommentList(): JSX.Element {
   return (
     <div>
       {isOpenDeleteModal && (
-        <Styles.PasswordModal visible={true} onOk={onClickDelete}>
+        <Styles.PasswordModal
+          visible={true}
+          onOk={onClickDelete}
+          onCancel={() => setIsOpenDeleteModal(false)}
+        >
           <div>비밀번호 입력: </div>
           <Styles.PasswordInput
             type="password"
             onChange={onChangeDeletePassword}
-          ></Styles.PasswordInput>
+          />
         </Styles.PasswordModal>
       )}
       {data?.fetchBoardComments.map((el) => (
@@ -86,6 +90,7 @@ export default function BoardCommentList(): JSX.Element {
             <Styles.MainWrapper>
               <Styles.WriterWrapper>
                 <Styles.Writer>{el.writer}</Styles.Writer>
+                <Styles.Star value={el.rating} disabled />
               </Styles.WriterWrapper>
               <Styles.Contents>{el.contents}</Styles.Contents>
             </Styles.MainWrapper>
