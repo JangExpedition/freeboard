@@ -1,11 +1,20 @@
-import { useMutation } from "@apollo/client";
+import { FetchResult, useMutation } from "@apollo/client";
 import * as Styles from "./BoardWrite.styles";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { CREATE_BOARD } from "./BoardWrite.queries";
+import { CREATE_BOARD, UPDATE_BOARD } from "./BoardWrite.queries";
+import {
+  IBoard,
+  IMutation,
+  IMutationCreateBoardArgs,
+  IMutationUpdateBoardArgs,
+  IQuery,
+  IUpdateBoardInput,
+} from "@/commons/types/generated/types";
+import { BoardWriteProps } from "./BoardWrite.type";
 
-export default function BoardWrite(): JSX.Element {
-  const [isActive, setIsActive] = useState(false);
+export default function BoardWrite(props: BoardWriteProps): JSX.Element {
+  const [isActive, setIsActive] = useState(true);
   const router = useRouter();
 
   const [writer, setWriter] = useState("");
@@ -18,21 +27,26 @@ export default function BoardWrite(): JSX.Element {
   const [subjectError, setSubjectError] = useState("");
   const [contentsError, setContentsError] = useState("");
 
-  const [createBoard] = useMutation(CREATE_BOARD);
-
-  useEffect(() => {
-    if (writer && password && subject && contents) {
-      setIsActive(true);
-    } else {
-      setIsActive(false);
-    }
-  }, [writer, password, subject, contents]);
+  const [createBoard] = useMutation<
+    Pick<IMutation, "createBoard">,
+    IMutationCreateBoardArgs
+  >(CREATE_BOARD);
+  const [updateBoard] = useMutation<
+    Pick<IMutation, "updateBoard">,
+    IMutationUpdateBoardArgs
+  >(UPDATE_BOARD);
 
   const onChangeWriter = (event: React.ChangeEvent) => {
     const target = event.target as HTMLInputElement;
     setWriter(target.value);
     if (target.value !== "") {
       setWriterError("");
+    }
+
+    if (target.value && password && subject && contents) {
+      setIsActive(false);
+    } else {
+      setIsActive(true);
     }
   };
 
@@ -42,6 +56,12 @@ export default function BoardWrite(): JSX.Element {
     if (target.value !== "") {
       setPasswordError("");
     }
+
+    if (writer && target.value && subject && contents) {
+      setIsActive(false);
+    } else {
+      setIsActive(true);
+    }
   };
 
   const onChangeSubject = (event: React.ChangeEvent) => {
@@ -50,6 +70,12 @@ export default function BoardWrite(): JSX.Element {
     if (target.value !== "") {
       setSubjectError("");
     }
+
+    if (writer && password && target.value && contents) {
+      setIsActive(false);
+    } else {
+      setIsActive(true);
+    }
   };
 
   const onChangeContents = (event: React.ChangeEvent) => {
@@ -57,6 +83,12 @@ export default function BoardWrite(): JSX.Element {
     setContents(target.value);
     if (target.value !== "") {
       setContentsError("");
+    }
+
+    if (writer && password && subject && target.value) {
+      setIsActive(false);
+    } else {
+      setIsActive(true);
     }
   };
 
@@ -85,17 +117,54 @@ export default function BoardWrite(): JSX.Element {
             },
           },
         });
-        const { _id } = result.data.createBoard;
+        const { _id } = result.data?.createBoard as IBoard;
         router.push(`/board/${_id}`);
-      } catch (error: any) {
-        alert(error.message);
+      } catch (error) {
+        if (error instanceof Error) alert(error.message);
       }
+    }
+  };
+
+  const onClickUpdate = async () => {
+    if (!subject && !contents) {
+      alert("수정한 내용이 없습니다.");
+      return;
+    }
+
+    if (!password) {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    const updateBoardInput: IUpdateBoardInput = {};
+    updateBoardInput.title = subject && subject;
+    updateBoardInput.contents = contents && contents;
+
+    try {
+      if (typeof router.query.boardId !== "string") {
+        return;
+      }
+
+      const result = await updateBoard({
+        variables: {
+          boardId: router.query.boardId,
+          password,
+          updateBoardInput,
+        },
+      });
+
+      const { _id } = result.data?.updateBoard as IBoard;
+      router.push(`/board/${_id}`);
+    } catch (error: any) {
+      alert(error.message);
     }
   };
 
   return (
     <Styles.Wrapper>
-      <Styles.Title>게시물 등록</Styles.Title>
+      <Styles.Title>
+        {props.isEdit ? "게시글 수정" : "게시글 등록"}
+      </Styles.Title>
       <Styles.WriterWrapper>
         <Styles.InputWrapper>
           <Styles.Label>작성자</Styles.Label>
@@ -103,6 +172,8 @@ export default function BoardWrite(): JSX.Element {
             type="text"
             onChange={onChangeWriter}
             placeholder="이름을 적어주세요."
+            defaultValue={props.data?.fetchBoard.writer as string}
+            readOnly={props.data?.fetchBoard.writer ? true : false}
           />
           <Styles.Error>{writerError}</Styles.Error>
         </Styles.InputWrapper>
@@ -122,6 +193,7 @@ export default function BoardWrite(): JSX.Element {
           type="text"
           onChange={onChangeSubject}
           placeholder="제목을 작성해주세요."
+          defaultValue={props.data?.fetchBoard.title}
         />
         <Styles.Error>{subjectError}</Styles.Error>
       </Styles.InputWrapper>
@@ -130,6 +202,7 @@ export default function BoardWrite(): JSX.Element {
         <Styles.Contents
           onChange={onChangeContents}
           placeholder="내용을 작성해주세요."
+          defaultValue={props.data?.fetchBoard.contents}
         />
         <Styles.Error>{contentsError}</Styles.Error>
       </Styles.InputWrapper>
@@ -160,8 +233,11 @@ export default function BoardWrite(): JSX.Element {
         <Styles.RadioLabel>사진</Styles.RadioLabel>
       </Styles.OptionWrapper>
       <Styles.ButtonWrapper>
-        <Styles.SubmitButton onClick={onClickSubmit} disabled={isActive}>
-          등록하기
+        <Styles.SubmitButton
+          onClick={props.isEdit ? onClickUpdate : onClickSubmit}
+          disabled={props.isEdit ? false : isActive}
+        >
+          {props.isEdit ? "수정하기" : "등록하기"}
         </Styles.SubmitButton>
       </Styles.ButtonWrapper>
     </Styles.Wrapper>

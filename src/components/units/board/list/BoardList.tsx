@@ -2,17 +2,25 @@ import { useQuery } from "@apollo/client";
 import { FETCH_BOARDS } from "./BoardList.queries";
 import * as Styles from "./BoardList.Styles";
 import { useRouter } from "next/router";
-import { IBoard } from "@/commons/types/generated/types";
+import {
+  IBoard,
+  IQuery,
+  IQueryFetchBoardsArgs,
+} from "@/commons/types/generated/types";
 import { getDate } from "@/commons/libararies/utils";
 
 export default function BoardList(): JSX.Element {
-  const { data } = useQuery(FETCH_BOARDS);
+  const { data } = useQuery<Pick<IQuery, "fetchBoards">, IQueryFetchBoardsArgs>(
+    FETCH_BOARDS,
+  );
   const router = useRouter();
 
-  const onClickMoveToBoardDetail = (event: React.MouseEvent) => {
-    const target = event.target as HTMLDivElement;
-    const id = target.id;
-    router.push(`/board/${id}`);
+  const onClickMoveToBoardDetail = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if (event.target instanceof HTMLDivElement) {
+      router.push(`/board/${event.target.id}`);
+    }
   };
 
   const onClickMoveToBoardNew = () => {

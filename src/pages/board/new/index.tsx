@@ -1,5 +1,5 @@
 import BoardNew from "@/components/units/board/write/BoardWrite";
 
 export default function BoardNewPage(): JSX.Element {
-  return <BoardNew />;
+  return <BoardNew isEdit={false} />;
 }
