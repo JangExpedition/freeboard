@@ -1,111 +1,48 @@
-import { useMutation, useQuery } from "@apollo/client";
-import * as Styles from "./BoardCommentList.styles";
+import { useQuery } from "@apollo/client";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { FETCH_BOARD_COMMENTS } from "./BoaerdComments.queries";
 import {
-  DELETE_BOARD_COMMENT,
-  FETCH_BOARD_COMMENTS,
-} from "./BoaerdComments.queries";
-import {
-  IMutation,
-  IMutationDeleteBoardCommentArgs,
   IQuery,
   IQueryFetchBoardCommentsArgs,
 } from "@/commons/types/generated/types";
-import { getDate } from "@/commons/libararies/utils";
+import InfiniteScroll from "react-infinite-scroller";
+import BoardCommentListItem from "./BoardCommentListItem";
 
 export default function BoardCommentList(): JSX.Element {
   const router = useRouter();
-  if (typeof router.query.boardId !== "string") {
-    return <></>;
-  }
+  if (typeof router.query.boardId !== "string") return <></>;
 
-  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
-  const [boardCommentId, setBoardCommentId] = useState("");
-  const [password, setPassword] = useState("");
-
-  const { data } = useQuery<
+  const { data, fetchMore } = useQuery<
     Pick<IQuery, "fetchBoardComments">,
     IQueryFetchBoardCommentsArgs
   >(FETCH_BOARD_COMMENTS, {
     variables: { boardId: router.query.boardId as string },
   });
 
-  const [deleteBoardComment] = useMutation<
-    Pick<IMutation, "deleteBoardComment">,
-    IMutationDeleteBoardCommentArgs
-  >(DELETE_BOARD_COMMENT);
+  const onLoadMore = (): void => {
+    if (data === undefined) return;
 
-  const onClickDelete = async (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ): Promise<void> => {
-    try {
-      await deleteBoardComment({
-        variables: { password, boardCommentId },
-        refetchQueries: [
-          {
-            query: FETCH_BOARD_COMMENTS,
-            variables: { boardId: router.query.boardId },
-          },
-        ],
-      });
-      setIsOpenDeleteModal(false);
-    } catch (error) {
-      if (error instanceof Error) alert(error.message);
-    }
-  };
+    void fetchMore({
+      variables: { page: Math.ceil(data?.fetchBoardComments.length / 10) + 1 },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (fetchMoreResult?.fetchBoardComments === undefined)
+          return { fetchBoardComments: [...prev.fetchBoardComments] };
 
-  const onClickOpenDeleteModal = (
-    event: React.MouseEvent<HTMLImageElement>,
-  ): void => {
-    setBoardCommentId(event.currentTarget.id);
-    setIsOpenDeleteModal(true);
-  };
-
-  const onChangeDeletePassword = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    setPassword(event.target.value);
+        return {
+          fetchBoardComments: [
+            ...prev.fetchBoardComments,
+            ...fetchMoreResult.fetchBoardComments,
+          ],
+        };
+      },
+    });
   };
 
   return (
-    <div>
-      {isOpenDeleteModal && (
-        <Styles.PasswordModal
-          visible={true}
-          onOk={onClickDelete}
-          onCancel={() => setIsOpenDeleteModal(false)}
-        >
-          <div>비밀번호 입력: </div>
-          <Styles.PasswordInput
-            type="password"
-            onChange={onChangeDeletePassword}
-          />
-        </Styles.PasswordModal>
-      )}
+    <InfiniteScroll pageStart={0} loadMore={onLoadMore} hasMore={true}>
       {data?.fetchBoardComments.map((el) => (
-        <Styles.ItemWrapper key={el._id}>
-          <Styles.FlexWrapper>
-            <Styles.Avatar src="/images/avatar.png" />
-            <Styles.MainWrapper>
-              <Styles.WriterWrapper>
-                <Styles.Writer>{el.writer}</Styles.Writer>
-                <Styles.Star value={el.rating} disabled />
-              </Styles.WriterWrapper>
-              <Styles.Contents>{el.contents}</Styles.Contents>
-            </Styles.MainWrapper>
-            <Styles.OptionWrapper>
-              <Styles.UpdateIcon src="/images/boardComment/list/option_update_icon.png/" />
-              <Styles.DeleteIcon
-                id={el._id}
-                src="/images/boardComment/list/option_delete_icon.png/"
-                onClick={onClickOpenDeleteModal}
-              />
-            </Styles.OptionWrapper>
-          </Styles.FlexWrapper>
-          <Styles.DateString>{getDate(el?.createdAt)}</Styles.DateString>
-        </Styles.ItemWrapper>
-      ))}
-    </div>
+        <BoardCommentListItem key={el._id} el={el} />
+      )) ?? <></>}
+    </InfiniteScroll>
   );
 }
