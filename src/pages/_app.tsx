@@ -4,7 +4,7 @@ import Layout from "@/components/layout";
 import { Global } from "@emotion/react";
 import type { AppProps } from "next/app";
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: AppProps): JSX.Element {
   return (
     <ApolloSetting>
       <>

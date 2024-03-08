@@ -152,7 +152,7 @@ export default function BoardWrite(props: BoardWriteProps): JSX.Element {
           },
         });
         const { _id } = result.data?.createBoard as IBoard;
-        router.push(`/board/${_id}`);
+        router.push(`/boards/${_id}`);
       } catch (error) {
         if (error instanceof Error) alert(error.message);
       }
@@ -194,7 +194,7 @@ export default function BoardWrite(props: BoardWriteProps): JSX.Element {
       });
 
       const { _id } = result.data?.updateBoard as IBoard;
-      router.push(`/board/${_id}`);
+      router.push(`/boards/${_id}`);
     } catch (error: any) {
       alert(error.message);
     }

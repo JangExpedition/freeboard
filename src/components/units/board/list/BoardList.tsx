@@ -1,30 +1,39 @@
 import { useQuery } from "@apollo/client";
-import { FETCH_BOARDS } from "./BoardList.queries";
+import { FETCH_BOARDS, FETCH_BOARDS_COUNT } from "./BoardList.queries";
 import * as Styles from "./BoardList.Styles";
 import { useRouter } from "next/router";
 import {
   IBoard,
   IQuery,
   IQueryFetchBoardsArgs,
+  IQueryFetchBoardsCountArgs,
 } from "@/commons/types/generated/types";
 import { getDate } from "@/commons/libararies/utils";
+import Paginations from "@/components/pagination/Paginations";
 
 export default function BoardList(): JSX.Element {
-  const { data } = useQuery<Pick<IQuery, "fetchBoards">, IQueryFetchBoardsArgs>(
-    FETCH_BOARDS,
-  );
   const router = useRouter();
+
+  const { data, refetch } = useQuery<
+    Pick<IQuery, "fetchBoards">,
+    IQueryFetchBoardsArgs
+  >(FETCH_BOARDS);
+
+  const { data: dataBoardsCount } = useQuery<
+    Pick<IQuery, "fetchBoardsCount">,
+    IQueryFetchBoardsCountArgs
+  >(FETCH_BOARDS_COUNT);
 
   const onClickMoveToBoardDetail = (
     event: React.MouseEvent<HTMLDivElement>,
   ) => {
     if (event.target instanceof HTMLDivElement) {
-      router.push(`/board/${event.target.id}`);
+      router.push(`/boards/${event.target.id}`);
     }
   };
 
   const onClickMoveToBoardNew = () => {
-    router.push("/board/new");
+    router.push("/boards/new");
   };
 
   return (
@@ -54,6 +63,10 @@ export default function BoardList(): JSX.Element {
       ))}
       <Styles.TableBottom>
         <Styles.Footer>
+          <Paginations
+            refetch={refetch}
+            count={dataBoardsCount?.fetchBoardsCount}
+          />
           <Styles.Button onClick={onClickMoveToBoardNew}>
             <Styles.PencilIcon src="/images/board/list/write.png" />
             게시물 등록하기

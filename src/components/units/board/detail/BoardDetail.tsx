@@ -32,11 +32,11 @@ export default function BoardDetail() {
       },
     });
 
-    router.push("/board");
+    router.push("/boards");
   };
 
   const onClickMoveToBoardEdit = () => {
-    router.push(`/board/${router.query.boardId}/edit`);
+    router.push(`/boards/${router.query.boardId}/edit`);
   };
 
   return (
@@ -77,7 +77,9 @@ export default function BoardDetail() {
         </Styles.Body>
       </Styles.CardWrapper>
       <Styles.ButtonWrapper>
-        <Styles.Button>목록으로</Styles.Button>
+        <Styles.Button onClick={() => router.push("/boards")}>
+          목록으로
+        </Styles.Button>
         <Styles.Button onClick={onClickMoveToBoardEdit}>수정하기</Styles.Button>
         <Styles.Button onClick={onClickDeleteBoard}>삭제하기</Styles.Button>
       </Styles.ButtonWrapper>
